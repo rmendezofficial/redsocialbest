@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from routers import users,posts,saves,comments,likes,followers
 
 origins = [
-    "http://localhost:3000", 
+    "https://a.rcmendez.com", 
 ]
 
 app=FastAPI()
