@@ -104,3 +104,4 @@ async def login(user:UserBase,db:Session=Depends(get_db)):
     user_db=db.query(Users).filter(Users.username==user.username,Users.password==user.password).first()
     if user_db:
         return {'message':'Loged','user':user_db}
+    return {'message':'An error has ocurred'}
