@@ -12,6 +12,7 @@ from jose import jwt,JWTError
 from passlib.context import CryptContext
 from datetime import datetime,timedelta
 import random
+from .users import current_user
 
 router=APIRouter(prefix='/posts',responses={404:{'message':'No encontrado'}})
 
@@ -29,11 +30,16 @@ class PostBase(BaseModel):
     photo:str
 
 @router.post('/create_post',status_code=status.HTTP_201_CREATED)
-async def create_post(post:PostBase,db:Session=Depends(get_db)):
+async def create_post(request:Request,post:PostBase,db:Session=Depends(get_db),user_auth:Users=Depends(current_user)):
     db_post=Posts(**post.model_dump())
-    db.add(db_post)
-    db.commit()
-    return{'message':'Post successfuly created'}
+    user=db.query(Users).filter(Users.id==db_post.user_id).first()
+    csrf_token_db=user.token
+    csrf_token_req=request.cookies.get('csrf_token')
+    if csrf_token_db==csrf_token_req:
+        db.add(db_post)
+        db.commit()
+        return{'message':'Post successfuly created'}
+    return {'message':'CSRF FAILED'}
 
 @router.get('/get_post/{post_id}',status_code=status.HTTP_200_OK)
 async def get_post(post_id:int,db:Session=Depends(get_db)):
