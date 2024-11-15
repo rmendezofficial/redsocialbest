@@ -9,3 +9,5 @@ psycopg2
 pymysql
 aiomysql
 pillow
+python-multipart
+bcrypt
