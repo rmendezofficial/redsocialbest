@@ -202,6 +202,8 @@ async def update_user(request:Request,user_id:int,user:UserBase,db:Session=Depen
     csrf_token_db=user_db.token
     csrf_token_req=request.cookies.get('csrf_token')
     if csrf_token_db==csrf_token_req:
+        hashed_password = crypt.hash(user.password)
+        user.password = hashed_password
         user_db.username=user.username
         user_db.password=user.password
         user_db.email=user_db.email
