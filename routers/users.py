@@ -193,7 +193,9 @@ async def login(form: OAuth2PasswordRequestForm = Depends(), db: Session = Depen
         key="csrf_token",
         value=csrf_token_final,
         httponly=True,       # Permitir acceso desde JavaScript
-        secure=True,          # Requiere HTTPS    # Solo permite solicitudes desde el mismo sitio
+        secure=True,  
+        samesite="None"
+        # Requiere HTTPS    # Solo permite solicitudes desde el mismo sitio
                                 # Tiempo de vida de la cookie en segundos (ej. 30 min)
     )
     
