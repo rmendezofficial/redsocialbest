@@ -40,6 +40,7 @@ async def create_post(request:Request,post:PostBase,db:Session=Depends(get_db),u
         db.commit()
         return{'message':'Post successfuly created'}
     return {'message':'CSRF FAILED'}
+  
 
 @router.get('/get_post/{post_id}',status_code=status.HTTP_200_OK)
 async def get_post(post_id:int,db:Session=Depends(get_db)):
@@ -81,7 +82,8 @@ async def get_posts(db:Session=Depends(get_db)):
                 'photo': p.photo,
                 'username': user.username,
                 'user_id': user.id,
-                'id': p.id
+                'id': p.id,
+                'date':p.date
             }
             posts_final.append(new_post)
             
@@ -89,8 +91,13 @@ async def get_posts(db:Session=Depends(get_db)):
     return {'message':'No posts'}
 
 @router.delete('/delete_post/{post_id}')
-async def delete_post(post_id:int,db:Session=Depends(get_db)):
+async def delete_post(request:Request,post_id:int,db:Session=Depends(get_db),user_auth:Users=Depends(current_user)):
     post_db=db.query(Posts).filter(Posts.id==post_id).first()
-    db.delete(post_db)
-    db.commit()
-    return {'message':'Post succesfuly deleted'}
+    user=db.query(Users).filter(Users.id==post_db.user_id).first()
+    csrf_token_db=user.token
+    csrf_token_req=request.cookies.get('csrf_token')
+    if csrf_token_db==csrf_token_req:
+        db.delete(post_db)
+        db.commit()
+        return {'message':'Post succesfuly deleted'}
+    return {'message':'CSRF FAILED'}
