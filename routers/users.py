@@ -86,21 +86,7 @@ async def get_user(user_id:int,db:Session=Depends(get_db)):
     
     return user_final
 
-@router.put('/update_user')
-async def update_user(user_id:int,user:UserBase,db:Session=Depends(get_db)):
-    user_db=db.query(Users).filter(Users.id==user_id).first()
-    user_db.username=user.username
-    user_db.password=user.password
-    user_db.email=user_db.email
-    db.commit()
-    return {'message':'User succesfuly updated'}
 
-@router.delete('/delete_user/{user_id}')
-async def delete_user(user_id:int,db:Session=Depends(get_db)):
-    user_db=db.query(Users).filter(Users.id==user_id).first()
-    db.delete(user_db)
-    db.commit()
-    return {'message':'User succesfuly deleted'}
 
 @router.get('/search')
 async def search(query:str,db:Session=Depends(get_db)):
@@ -193,9 +179,8 @@ async def login(form: OAuth2PasswordRequestForm = Depends(), db: Session = Depen
         key="csrf_token",
         value=csrf_token_final,
         httponly=True,       # Permitir acceso desde JavaScript
-        secure=True,  
-        samesite="None"
-        # Requiere HTTPS    # Solo permite solicitudes desde el mismo sitio
+        samesite="None",
+        secure=True# Requiere HTTPS    # Solo permite solicitudes desde el mismo sitio
                                 # Tiempo de vida de la cookie en segundos (ej. 30 min)
     )
     
@@ -209,3 +194,29 @@ async def logout(response: JSONResponse):
     response.delete_cookie("csrf_token")
     
     return {"message": "Logout successful"}
+
+
+@router.put('/update_user')
+async def update_user(request:Request,user_id:int,user:UserBase,db:Session=Depends(get_db),user_auth:Users=Depends(current_user)):
+    user_db=db.query(Users).filter(Users.id==user_id).first()
+    csrf_token_db=user_db.token
+    csrf_token_req=request.cookies.get('csrf_token')
+    if csrf_token_db==csrf_token_req:
+        user_db.username=user.username
+        user_db.password=user.password
+        user_db.email=user_db.email
+        db.commit()
+        return {'message':'User succesfuly updated'}
+    return {'message':'CSRF FAILED'}
+
+@router.delete('/delete_user/{user_id}')
+async def delete_user(request:Request,user_id:int,db:Session=Depends(get_db),user_auth:Users=Depends(current_user)):
+    user_db=db.query(Users).filter(Users.id==user_id).first()
+    csrf_token_db=user_db.token
+    csrf_token_req=request.cookies.get('csrf_token')
+    if csrf_token_db==csrf_token_req:
+        db.delete(user_db)
+        db.commit()
+        return {'message':'User succesfuly deleted'}
+    return {'message':'CSRF FAILED'}
+
